@@ -1,0 +1,5 @@
+#Doc file
+*.doc
+
+#rar compressed files
+*.rar
