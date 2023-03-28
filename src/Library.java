@@ -4,7 +4,6 @@
  */
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 
 /*
@@ -45,25 +44,22 @@ public class Library
 	 * If it is already in a list, set the errorMsg string and return false. Otherwise add it to the list and return true
 	 * See the video
 	 */
-	public boolean download(AudioContent content)
+	public void download(AudioContent content)
 	{
 		switch (content.getType()) {
 			case Song.TYPENAME -> {
 				if (songs.contains((Song) content)) {
-					errorMsg = "Song already downloaded";
-					return false;
+					throw new DownloadFailureException("Song already downloaded");
 				}
 				songs.add((Song) content);
 			}
 			case AudioBook.TYPENAME -> {
 				if (audiobooks.contains((AudioBook) content)) {
-					errorMsg = "Audiobook already downloaded";
-					return false;
+					throw new DownloadFailureException("Audiobook already downloaded");
 				}
 				audiobooks.add((AudioBook) content);
 			}
 		}
-		return true;
 	}
 	
 	// Print Information (printInfo()) about all songs in the array list
@@ -204,15 +200,13 @@ public class Library
 	 */
 	
 	// Play song from songs list
-	public boolean playSong(int index)
+	public void playSong(int index)
 	{
 		if (index < 1 || index > songs.size())
 		{
-			errorMsg = "Song Not Found";
-			return false;
+			throw new SongNotFoundException("Song Not Found");
 		}
-		songs.get(index-1).play();
-		return true;
+		songs.get(index - 1).play();
 	}
 	
 	// Play podcast from list (specify season and episode)
@@ -230,32 +224,28 @@ public class Library
 	}
 	
 	// Play a chapter of an audio book from list of audiobooks
-	public boolean playAudioBook(int index, int chapter)
+	public void playAudioBook(int index, int chapter)
 	{
 		if (index-1 >= audiobooks.size()) {
-			errorMsg = "Book not found.";
-			return false;
+			throw new AudioBookNotFoundException("Book not found.");
 		}
 
 		AudioBook audioBook = audiobooks.get(index-1);
 		audioBook.selectChapter(chapter-1);
 		audioBook.play();
 
-		return false;
 	}
 	
 	// Print the chapter titles (Table Of Contents) of an audiobook
 	// see class AudioBook
-	public boolean printAudioBookTOC(int index)
+	public void printAudioBookTOC(int index)
 	{
 		if (audiobooks.size() <= index-1) {
-			errorMsg = "Book not found.";
-			return false;
+			throw new AudioBookNotFoundException("Book not found.");
 		}
 
 		AudioBook audioBook = audiobooks.get(index-1);
 		audioBook.printTOC();
-		return true;
 	}
 	
   /*
@@ -264,21 +254,19 @@ public class Library
 	
 	// Make a new playlist and add to playlists array list
 	// Make sure a playlist with the same title doesn't already exist
-	public boolean makePlaylist(String title)
+	public void makePlaylist(String title)
 	{
 		for (Playlist playlist : playlists) {
 			if (playlist.getTitle().equals(title)) {
-				errorMsg = "Playlist already exists.";
-				return false;
+				throw new PlaylistNotFoundException("Playlist already exists.");
 			}
 		}
 
 		playlists.add(new Playlist(title));
-		return true;
 	}
 	
 	// Print list of content information (songs, audiobooks etc) in playlist named title from list of playlists
-	public boolean printPlaylist(String title)
+	public void printPlaylist(String title)
 	{
 		Playlist playlist = null;
 		for (Playlist list : playlists) {
@@ -288,17 +276,13 @@ public class Library
 		}
 
 		if (playlist == null) {
-			errorMsg = "Playlist not found.";
-			return false;
+			throw new PlaylistNotFoundException("Playlist not found.");
 		}
-
 		playlist.printContents();
-
-		return false;
 	}
-	
+
 	// Play all content in a playlist
-	public boolean playPlaylist(String playlistTitle)
+	public void playPlaylist(String playlistTitle)
 	{
 		Playlist playlist = null;
 		for (Playlist list : playlists) {
@@ -307,8 +291,7 @@ public class Library
 			}
 		}
 		if (playlist == null) {
-			errorMsg = "Playlist not found.";
-			return false;
+			throw new PlaylistNotFoundException("Playlist not found.");
 		}
 
 		ArrayList<AudioContent> content = playlist.getContent();
@@ -318,9 +301,6 @@ public class Library
 			content.get(index).play();
 			System.out.println("");
 		}
-
-
-		return true;
 	}
 
 	public Playlist getPlaylistByTitle(String title) {
@@ -339,22 +319,20 @@ public class Library
 	}
 
 	// Play a specific song/audiobook in a playlist
-	public boolean playPlaylist(String playlistTitle, int indexInPL)
+	public void playPlaylist(String playlistTitle, int indexInPL)
 	{
 		Playlist playlist = getPlaylistByTitle(playlistTitle);
 
-		if (playlist == null) return false;
+		if (playlist == null) throw new PlaylistNotFoundException("Playlist not found.");
 
 		playlist.getContent().get(indexInPL - 1).play();
-
-		return true;
 	}
 
 	// Add a song/audiobook/podcast from library lists at top to a playlist
 	// Use the type parameter and compare to Song.TYPENAME etc
 	// to determine which array list it comes from then use the given index
 	// for that list
-	public boolean addContentToPlaylist(String type, int index, String playlistTitle) {
+	public void addContentToPlaylist(String type, int index, String playlistTitle) {
 		Playlist playlist = null;
 		for (Playlist listItem : playlists) {
 			if (listItem.getTitle().equals(playlistTitle)) {
@@ -363,10 +341,7 @@ public class Library
 			}
 		}
 
-		if (playlist == null) {
-			errorMsg = "Playlist not found.";
-			return false;
-		}
+		if (playlist == null) throw new PlaylistNotFoundException("Playlist not found.");
 
 		switch (type.toUpperCase()) {
 			case Song.TYPENAME -> {
@@ -375,22 +350,76 @@ public class Library
 			case AudioBook.TYPENAME -> playlist.addContent(audiobooks.get(index-1));
 		}
 
-		return true;
 	}
 
   // Delete a song/audiobook/podcast from a playlist with the given title
 	// Make sure the given index of the song/audiobook/podcast in the playlist is valid 
-	public boolean delContentFromPlaylist(int index, String title)
+	public void delContentFromPlaylist(int index, String title)
 	{
 		Playlist playlist = getPlaylistByTitle(title);
 		ArrayList<AudioContent> content = playlist.getContent();
 
 		if (index-1 > 0 && index-1 < content.size()) {
 			content.remove(index - 1);
-		} else return false;
-
-		return true;
+		}
 	}
 	
+}
+
+//DONE Make custom exception classes
+//DONE Change the return type of the functions in Library class to void
+class AudioContentNotFoundException extends RuntimeException {
+	public AudioContentNotFoundException(String error) {
+		super(error);
+	}
+
+	@Override
+	public String getMessage() {
+		return super.getMessage();
+	}
+}
+
+class DownloadFailureException extends RuntimeException {
+	public DownloadFailureException(String message) {
+		super(message);
+	}
+
+	@Override
+	public String getMessage() {
+		return super.getMessage();
+	}
+}
+
+class SongNotFoundException extends RuntimeException {
+	public SongNotFoundException(String message) {
+		super(message);
+	}
+
+	@Override
+	public String getMessage() {
+		return super.getMessage();
+	}
+}
+
+class AudioBookNotFoundException extends RuntimeException {
+	public AudioBookNotFoundException(String message) {
+		super(message);
+	}
+
+	@Override
+	public String getMessage() {
+		return super.getMessage();
+	}
+}
+
+class PlaylistNotFoundException extends RuntimeException {
+	public PlaylistNotFoundException(String message) {
+		super(message);
+	}
+
+	@Override
+	public String getMessage() {
+		return super.getMessage();
+	}
 }
 
