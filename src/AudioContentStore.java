@@ -101,6 +101,7 @@ public class AudioContentStore {
 			while ((line = bufferedReader.readLine()) != null) {
 				switch (line) {
 					case "SONG"->{
+						System.out.println("Loading SONG");
 						String id = bufferedReader.readLine();
 						String title = bufferedReader.readLine();
 						int year = Integer.parseInt(bufferedReader.readLine());
@@ -119,6 +120,7 @@ public class AudioContentStore {
 					}
 
 					case "AUDIOBOOK" -> {
+						System.out.println("Loading AUDIOBOOK");
 						String id = bufferedReader.readLine();
 						String title = bufferedReader.readLine();
 						int year = Integer.parseInt(bufferedReader.readLine());
@@ -154,65 +156,16 @@ public class AudioContentStore {
 		return audioContents;
 	}
 
-	private ArrayList<AudioContent> initializationFromFile() throws FileNotFoundException {
+	public Integer searchTitle(String title) {
+		return titleMap.get(title);
+	}
 
+	public ArrayList<Integer> searchArtists(String artist) {
+		return artistMap.get(artist);
+	}
 
-		Scanner scanner = new Scanner(new File("D:\\Desktop_backup\\CPS209\\Assignment1\\src\\store.txt"));
-		ArrayList<AudioContent> audioContents = new ArrayList<>();
-
-		while (scanner.hasNextLine()) {
-			String line1 = scanner.nextLine();
-			try {
-				switch (line1) {
-					case "SONG" -> {
-						String id = scanner.nextLine();
-						String title = scanner.nextLine();
-						int year = Integer.parseInt(scanner.nextLine());
-						int length = Integer.parseInt(scanner.nextLine());
-						String artist = scanner.nextLine();
-						String composer = scanner.nextLine();
-						String genre = scanner.nextLine();
-						System.out.println(genre);
-						int numberOfLyrics = scanner.hasNextLine() ? Integer.parseInt(scanner.nextLine()) : scanner.nextInt();
-						StringBuilder lyrics = new StringBuilder();
-						for (int i = 0; i < numberOfLyrics; i++) lyrics.append(scanner.nextLine());
-						String audioFile = lyrics.toString();
-						Song song = new Song(title, year, id, Song.TYPENAME, audioFile, length, artist, composer, Song.Genre.valueOf(genre), audioFile);
-						audioContents.add(song);
-					}
-					case "AUDIOBOOK" -> {
-						String id = scanner.nextLine();
-						String title = scanner.nextLine();
-						int year = Integer.parseInt(scanner.nextLine());
-						int length = Integer.parseInt(scanner.nextLine());
-						String author = scanner.nextLine();
-						String narrator = scanner.nextLine();
-						int numberOfChapters = Integer.parseInt(scanner.nextLine());
-
-						ArrayList<String> chapterTitles = new ArrayList<>();
-						ArrayList<String> chapterContents = new ArrayList<>();
-						for (int i = 0; i < numberOfChapters; i++) {
-							chapterTitles.add(scanner.nextLine());
-						}
-
-						for (int i = 0; i < numberOfChapters; i++) {
-							int numberOfContents = Integer.parseInt(scanner.nextLine());
-							StringBuilder content = new StringBuilder();
-
-							for (int j = 0; j < numberOfContents; j++) {
-								content.append(scanner.nextLine());
-							}
-							chapterContents.add(content.toString());
-						}
-						audioContents.add(new AudioBook(title, year, id, AudioBook.TYPENAME, "", length, author, narrator, chapterTitles, chapterContents));
-					}
-
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		return audioContents;
+	public ArrayList<Integer> searchGenre(String genre) {
+		return genreMap.get(genre.toUpperCase());
 	}
 
 	public AudioContent getContent(int index) {

@@ -3,15 +3,13 @@
  * Student Id:501152907
  */
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Scanner;
-import java.util.StringTokenizer;
+import java.util.*;
 
 // Simulation of a Simple Text-based Music App (like Apple Music)
 //DONE try catch the errors thrown by the Library, use a single try to surround all if statements except for the download( it needs separate try catch)
 
-public class MyAudioUI {
+public class
+MyAudioUI {
 	public static void main(String[] args) {
 		// Simulation of audio content in an online store
 		// The songs, podcasts, audiobooks in the store can be downloaded to your mylibrary
@@ -23,7 +21,9 @@ public class MyAudioUI {
 		Scanner scanner = new Scanner(System.in);
 		System.out.print(">");
 
-		// Process keyboard actions
+
+
+
 		while (scanner.hasNextLine()) {
 			String action = scanner.nextLine();
 			try {
@@ -31,22 +31,120 @@ public class MyAudioUI {
 				if (action == null || action.equals("")) {
 					System.out.print("\n>");
 					continue;
-				} else if (action.equalsIgnoreCase("Q") || action.equalsIgnoreCase("QUIT"))
+				} else if (action.equalsIgnoreCase("Q") || action.equalsIgnoreCase("QUIT")){
 					return;
-					//TODO SEARCHA input artist or author string, return index and info of all audio content
-					//TODO SEARCHG input genre string, print all indices and info of all songs with the genre
-					//TODO DOWNLOADA input artist or author string,download all songs or audiobooks with the artists to mylobrary
-					//TODO DOWNLOADG download all songs with the input genre
+				}
 				else if (action.equalsIgnoreCase("SEARCH")) {
-					System.out.print("Title ");
+					System.out.print("Title:");
 					//TODO return with the index and the info
-				} else if (action.equalsIgnoreCase("STORE"))    // List all songs
+					// Or No matches for XXX
+					String title = scanner.nextLine();
+					Integer index = store.searchTitle(title);
+
+					if (index == null) {
+						System.out.println("No matches for " + title);
+						continue;
+					}
+
+					AudioContent content = store.getContent(index + 1);
+					System.out.print((index+1)+". ");
+					content.printInfo();
+				}
+				else if (action.equalsIgnoreCase("SEARCHA")) {
+					//TODO SEARCHA input artist or author string, return index and info of all audio content
+					// Artist: xxx
+					// No matches for xxx or return the info
+					System.out.print("Artist:");
+					String artistName = scanner.nextLine();
+					ArrayList<Integer> indices = store.searchArtists(artistName);
+
+					if (indices == null) {
+						System.out.println("No matches for " + artistName);
+						continue;
+					}
+
+					for (Integer index : indices) {
+						System.out.print((index+1)+". ");
+						store.getContent(index+1).printInfo();
+					}
+				}
+				else if (action.equalsIgnoreCase("SEARCHG")) {
+					//TODO SEARCHG input genre string, print all indices and info of all songs with the genre
+					// Genre [POP, ROCK, JAZZ, HIPHOP, RAP, CLASSICAL]: xxx
+					// No matches for xx or return the info
+					System.out.print("Genre [POP, ROCK, JAZZ, HIPHOP, RAP, CLASSICAL]: ");
+					String genre = scanner.nextLine();
+					ArrayList<Integer> indices = store.searchGenre(genre.toUpperCase());
+
+					// Edge case when the genre is not found.
+					if (indices == null) {
+						System.out.println("No matches for " + genre);
+						continue;
+					}
+
+					for (Integer index : indices) {
+						System.out.print((index + 1) + ". ");
+						store.getContent(index+1).printInfo();
+					}
+				}
+				else if (action.equalsIgnoreCase("DOWNLOADA")) {
+					//TODO DOWNLOADA input artist or author string,download all songs or audiobooks with the artists to mylobrary
+					// Artist Name: xx
+					// SONG/AUDIOBOOK xx downloaded or SONG/AUDIOBOOK xxx already downloaded
+					System.out.print("Artist Name: ");
+					String artistName = scanner.nextLine();
+					ArrayList<Integer> indices = store.searchArtists(artistName);
+
+					if (indices == null) {
+						System.out.println("No matches for " + artistName);
+						continue;
+					}
+
+					for (Integer index : indices) {
+						AudioContent content = store.getContent(index);
+						try {
+							mylibrary.download(content);
+							System.out.println(content.getType()+" "+content.getTitle()+" downloaded");
+						} catch (DownloadFailureException e) {
+							System.out.println(content.getType()+" "+content.getTitle()+" already downloaded");
+						}
+					}
+
+				}
+				else if (action.equalsIgnoreCase("DOWNLOADG")) {
+					//TODO DOWNLOADG download all songs with the input genre
+					System.out.print("Genre: ");
+					String genre = scanner.nextLine();
+					ArrayList<Integer> indices = store.searchGenre(genre);
+
+					if (indices == null) {
+						System.out.println("No matches for " + genre);
+					}
+
+					for (Integer index : indices) {
+						AudioContent content = store.getContent(index);
+
+						// If it is not song
+						if (!content.getType().equals(Song.TYPENAME)) break;
+
+						try {
+							mylibrary.download(content);
+							System.out.println("SONG "+content.getTitle()+" downloaded");
+						} catch (DownloadFailureException e) {
+							System.out.println("SONG " + content.getTitle() + " already downloaded");
+						}
+
+					}
+				}
+				else if (action.equalsIgnoreCase("STORE"))    // List all songs
 				{
 					store.listAll();
-				} else if (action.equalsIgnoreCase("SONGS"))    // List all songs
+				}
+				else if (action.equalsIgnoreCase("SONGS"))    // List all songs
 				{
 					mylibrary.listAllSongs();
-				} else if (action.equalsIgnoreCase("BOOKS"))    // List all songs
+				}
+				else if (action.equalsIgnoreCase("BOOKS"))    // List all songs
 				{
 					mylibrary.listAllAudioBooks();
 				} else if (action.equalsIgnoreCase("PODCASTS"))    // List all songs
@@ -62,19 +160,29 @@ public class MyAudioUI {
 				// Download audiocontent (song/audiobook/podcast) from the store
 				// Specify the index of the content
 				else if (action.equalsIgnoreCase("DOWNLOAD")) {
-					int index = 0;
+					//TODO DOWNLOAD modify. FORMAT: From Store Content #: xx
+					// To Store Content #: xx
+					// SONG xxx Added to Library
+					// Process keyboard actions
 
-					System.out.print("Store Content #: ");
-					if (scanner.hasNextInt()) {
-						index = scanner.nextInt();
-						scanner.nextLine(); // "consume" nl character (necessary when mixing nextLine() and nextInt())
-					}
-					try {
-						mylibrary.download(store.getContent(index));
-					} catch (NullPointerException exception) {
-						System.out.println("Index out of bound of Store!!");
-					}
 
+					int lowerBound = 0, upperBound = 0;
+					System.out.print("From Store Content #: ");
+					lowerBound = scanner.nextInt();
+					System.out.print("To Store Content #: ");
+					upperBound = scanner.nextInt();
+
+					for (int i = lowerBound; i <= upperBound; i++) {
+						AudioContent content = store.getContent(i);
+						String type = content.getType();
+
+						try {
+							mylibrary.download(content);
+							System.out.println(type + " " + content.getTitle() + " downloaded");
+						} catch (DownloadFailureException e) {
+							System.out.println(type + " " + content.getTitle() + " already downloaded");
+						}
+					}
 				}
 				// Get the *library* index (index of a song based on the songs list)
 				// of a song from the keyboard and play the song
